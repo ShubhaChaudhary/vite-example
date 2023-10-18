@@ -1,0 +1,4 @@
+src/types
+src/stories
+cypress
+*.js

@@ -1,0 +1,235 @@
+---
+defaults: &defaults
+  docker:
+    #- image: dubber/jenkins-tools:latest
+    #  auth:
+    #    username: $DOCKERHUB_USER
+    #    password: $DOCKERHUB_PASS
+    - image: cimg/node:16.15.1
+  working_directory: ~/project
+
+version: 2.1
+
+jobs:
+  lint:
+    environment:
+      ENV: test
+      CI: 'true'
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v2-deps-{{ checksum "yarn.lock" }}
+            - v2-deps-
+      - run:
+          name: Install dependencies
+          command: make install
+      - save_cache:
+          key: v2-deps-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+            - ~/.cache
+
+      #- run:
+      #    name: Audit dependencies
+      #    command: make security
+      - run:
+          name: Lint source code
+          command: make lint
+
+  test:
+    environment:
+      ENV: test
+      CI: 'true'
+    <<: *defaults
+    # parallelism: 2
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v2-deps-{{ checksum "yarn.lock" }}
+            - v2-deps-
+      - run:
+          name: Install dependencies
+          command: make install
+      - save_cache:
+          key: v2-deps-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+            - ~/.cache
+      - run: mkdir ~/junit
+      - run:
+          name: Unit test source code
+          command: |
+            TEST_FILES=$(circleci tests glob "src/__tests__/*.tsx?" | circleci tests split)
+
+            ADDITIONAL_JEST_ARGUMENTS="--max-workers=2 $TEST_FILES" yarn test:unit
+      - run:
+          command: cp junit-jest.xml ~/junit/junit.xml
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+      # - store_test_results:
+      #     path: coverage
+      # - store_artifacts:
+      #     path: coverage/lcov-report
+
+  e2e-test:
+    environment:
+      ENV: test
+      CI: 'true'
+    docker:
+      - image: cypress/browsers:node16.17.0-chrome106
+    working_directory: ~/project
+    parallelism: 2
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v2-e2e-deps-{{ checksum "yarn.lock" }}
+            - v2-e2e-deps-
+      - run:
+          name: Install dependencies
+          command: yarn install --frozen-lockfile --non-interactive
+      - save_cache:
+          key: v2-e2e-deps-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+            - ~/.cache
+      - run: mkdir ~/junit
+      - run:
+          name: E2E test source code
+          command: |
+            TEST_FILES=$(circleci tests glob "cypress/integration/**/*.spec.ts" | circleci tests split)
+
+            ADDITIONAL_CYPRESS_ARGUMENTS="--browser chrome --spec ${TEST_FILES//$'\n'/','}" yarn test:e2e
+      - run:
+          command: cp junit-cypress.xml ~/junit/junit.xml
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+      # - store_test_results:
+      #     path: coverage
+      # - store_artifacts:
+      #     path: coverage/lcov-report
+
+  # This needs to have write access to github
+  #tag:
+  #  docker:
+  #    - image: cimg/node:16.14.0
+  #  steps:
+  #    - checkout
+  #    - run:
+  #        name: Tag build (Optimistic tagging)
+  #        command: |
+  #          git tag -f "ci-build-$CIRCLE_BUILD_NUM"
+  #          git push -f --tags
+
+  # This doesn't deploy anything it just sees if yarn build is successful
+  build:
+    parameters:
+      env:
+        type: string
+    environment:
+      ENV: <<parameters.env>>
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v2-deps-{{ checksum "yarn.lock" }}
+            - v2-deps-
+      - run:
+          name: Install dependencies
+          command: make install
+      - save_cache:
+          key: v2-deps-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+            - ~/.cache
+      - run:
+          name: Build <<parameters.env>> artifacts
+          command: make build
+      - run:
+          name: Package <<parameters.env>> artifacts
+          command: make package
+      - run:
+          name: List artifacts
+          command: ls -altr ./package
+      ## TODO: publish artifacts to Github
+      - store_artifacts:
+          path: ./package/notes-web-app-<<parameters.env>>.tgz
+      - run:
+          name: Persist <<parameters.env>> build
+          command: |
+            mkdir <<parameters.env>>
+            mv build <<parameters.env>>
+      - persist_to_workspace: # store builds in workspace
+          root: .
+          paths:
+            - <<parameters.env>>/build/*
+
+  upload-sourcemaps:
+    parameters:
+      env:
+        type: string
+    environment:
+      ENV: <<parameters.env>>
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v2-deps-{{ checksum "yarn.lock" }}
+            - v2-deps-
+      - run:
+          name: Install dependencies
+          command: make install
+      - save_cache:
+          key: v2-deps-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+            - ~/.cache
+      - attach_workspace: # fetch builds in workspace
+          at: ~/project
+      - run:
+          name: Get <<parameters.env>> build
+          command: |
+            mv <<parameters.env>>/build build
+      - run:
+          name: Upload sourcemaps
+          command: yarn sourcemap:upload
+
+workflows:
+  test-build-deploy:
+    jobs:
+      - lint
+      - test
+      - e2e-test
+      # - tag
+      - build:
+          matrix:
+            parameters:
+              env: ['local-dev', 'local-stg', 'local-sbox', 'local-us']
+          requires:
+            - lint
+            - test
+            - e2e-test
+          #  - tag
+
+      - upload-sourcemaps:
+          matrix:
+            parameters:
+              env: ['local-dev', 'local-stg', 'local-sbox', 'local-us']
+          filters:
+            branches:
+              only:
+                - main
+                - develop
+          requires:
+            - build

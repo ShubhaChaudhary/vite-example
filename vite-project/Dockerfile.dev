@@ -1,0 +1,45 @@
+FROM node:16-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY  yarn.lock ./
+COPY . ./
+COPY bin/entrypoint /usr/local/bin/entrypoint
+
+ENTRYPOINT [ "entrypoint" ]
+
+CMD ["yarn","start"]
+
+# web-server app
+
+FROM alpinelab/ruby-dev:2.7.6@sha256:2e22f25b7b1dc244c94b661b5189d43aa7d22d3db84e2eff4fe390e27d5dc594
+
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
+ && apt-get update \
+ && apt-get install --assume-yes --no-install-recommends --no-install-suggests \
+      bash nodejs openssl mediainfo sox ffmpeg imagemagick \
+      git libsndfile-dev libxml2-dev libxslt-dev openssl \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY bin/developer-entrypoint /usr/local/bin/developer-entrypoint
+
+ENTRYPOINT ["gosu-entrypoint", "foreman-entrypoint", "bundler-entrypoint", "yarn-entrypoint", "rails-entrypoint", "developer-entrypoint"]
+
+CMD ["foreman", "start", "-f", "Procfile.dev"]
+
+# msteams
+
+FROM node:18.14.2-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY yarn.lock ./
+COPY . ./
+
+COPY bin/entrypoint /usr/local/bin/entrypoint
+
+ENTRYPOINT [ "entrypoint" ]
+
+CMD [ "yarn", "serve" ]

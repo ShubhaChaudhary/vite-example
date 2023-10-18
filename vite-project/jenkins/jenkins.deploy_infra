@@ -1,0 +1,77 @@
+def accountId = ""
+switch(params.ENVIRONMENT) {
+  case "local-dev":
+    accountId = "977314462590"
+    break
+  case "local-stg":
+    accountId = "303647563259"
+    break
+  case "local-uat":
+    accountId = "747761526747"
+    break
+  case "local-uk":
+    accountId = "607444552298"
+    break
+  case "local-us":
+    accountId = "126264810980"
+    break    
+  case "area-na":
+    accountId = "126264810980"
+    break
+  case "local-sbox":
+    accountId = "963978185499"
+    break    
+  default:
+    throw new Exception("Environment is not supported")
+}
+
+pipeline {
+  libraries {
+    lib "jenkins-shared-library"
+  }
+  agent {
+    kubernetes {
+      inheritFrom 'jenkins-tools'
+      idleMinutes 20
+      yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  name: notes-web-app-deploy-pod
+  annotations:
+    iam.amazonaws.com/role: "arn:aws:iam::${accountId}:role/k8s-pipeline-cloud-resource-management"
+spec:
+  containers: []
+  nodeSelector:
+    type: tools
+  tolerations:
+  - effect: NoSchedule
+    key: type
+    operator: Equal
+    value: tools
+"""
+    }
+  }
+  stages {
+    stage('Checkout branch') {
+      steps {
+        git credentialsId: 'devops-github-pat', 
+          url: "https://github.com/DubberSoftware/notes-web-app.git",
+          branch: params.BRANCH_NAME
+      }
+    }
+    stage('Deploy infrastructure') {
+      steps {
+        container('jenkins-tools') {
+          withCredentials([gitUsernamePassword(credentialsId: 'devops-github-pat')]) {
+            sh """
+                ENV=${params.ENVIRONMENT} make tf-init
+                ENV=${params.ENVIRONMENT} make tf-plan
+                make tf-apply
+              """
+          }
+        }
+      }
+    }
+  }
+}

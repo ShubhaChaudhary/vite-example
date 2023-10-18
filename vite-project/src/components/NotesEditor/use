@@ -1,0 +1,44 @@
+import { useCallback, useEffect, useRef } from 'react';
+import { Editor, NodeEntry } from 'slate';
+import { CursorEditor, useCursors } from 'slate-yjs';
+
+// SEE: https://github.com/BitPhinix/slate-yjs/discussions/293#discussioncomment-1285673
+// The useCursors built into slate-yjs is very slow. This uses a suggested optimisation
+// from that discussion, and the next version of slate-yjs should have an optimized version we can
+// eventually switch to.
+const useMemoizedDecorate = (editor: Editor & CursorEditor) => {
+  const { decorate, cursors } = useCursors(editor);
+  const decorateRef = useRef(decorate);
+  const cursorsRef = useRef(cursors);
+
+  useEffect(() => {
+    decorateRef.current = decorate;
+    cursorsRef.current = cursors;
+  }, [decorate, cursors]);
+
+  const memoizedDecorate = useCallback((entry: NodeEntry) => {
+    const memoInvalidationRanges = cursorsRef.current
+      .filter((cursor) => {
+        try {
+          return !!Editor.above(editor, {
+            at: cursor,
+            match: (node) => node === entry[0]
+          });
+        } catch (error) {
+          return false;
+        }
+      })
+      .flatMap((cursor) => {
+        return [cursor];
+      });
+
+    return decorateRef.current(entry).concat(memoInvalidationRanges);
+  }, []);
+
+  return {
+    cursors,
+    decorate: memoizedDecorate
+  };
+};
+
+export default useMemoizedDecorate;

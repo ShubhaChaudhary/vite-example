@@ -1,0 +1,78 @@
+{
+    "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.11/MicrosoftTeams.schema.json",
+    "manifestVersion": "1.11",
+    "id": "{{MICROSOFT_APP_ID}}",
+    "version": "{{VERSION}}",
+    "packageName": "{{PACKAGE_NAME}}",
+    "developer": {
+      "name": "Dubber",
+      "websiteUrl": "https://www.dubber.net/teams",
+      "privacyUrl": "https://www.dubber.net/privacy-notice",
+      "termsOfUseUrl": "https://www.dubber.net/terms"
+    },
+    "name": {
+      "short": "{{APPLICATION_NAME}}",
+      "full": "{{APPLICATION_NAME}}"
+    },
+    "description": {
+      "short": "Notes by Dubber helps teams to be more focused and productive in meetings.",
+      "full": "Our AI Notetaker enables everyone to capture important moments of a conversation, allowing people to stay focused. Notes by Dubber automatically generates transcripts of important Moments, lets you add comments, actions and notes in the collaborative editor, all for review after the meeting.\n**Account dependency and limitation**:\nUsing Notes by Dubber requires an account license. Find out more here: https://www.dubber.net/teams\n* Key features:\n* Capture important parts of the conversation with one click\n* AI suggested Meeting Moments\n* Take actions during meetings and assign to individuals\n* Collaborative meeting notes\n* AI generated meeting summary\n* Curate meeting summary\n* Share meeting summary\n* Playback\n* Tags"
+    },
+    "icons": {
+      "outline": "icon-outline.png",
+      "color": "icon-color.png"
+    },
+    "accentColor": "#003169",
+    "configurableTabs": [
+      {
+        "configurationUrl": "https://{{PUBLIC_UI_HOSTNAME}}/notesByDubberTab/config.html?name={loginHint}&tenant={tid}&group={groupId}&theme={theme}",
+        "canUpdateConfiguration": true,
+        "scopes": ["groupchat"],
+        "context": ["meetingChatTab", "meetingDetailsTab", "meetingSidePanel"]
+      }
+    ],
+    "staticTabs": [
+      {
+        "entityId": "dd9db0f0-2b9c-430c-8fa1-a0d90d0efb73",
+        "name": "Meetings",
+        "contentUrl": "https://{{PUBLIC_UI_HOSTNAME}}/meetingsTab/index.html?name={loginHint}&tenant={tid}&theme={theme}",
+        "scopes": ["personal"]
+      },
+      {
+        "entityId": "56abf6bc-d8ea-4575-85a4-7bdfe343de14",
+        "name": "Actions",
+        "contentUrl": "https://{{PUBLIC_UI_HOSTNAME}}/actionsTab/index.html?name={loginHint}&tenant={tid}&theme={theme}",
+        "scopes": ["personal"]
+      },
+      {
+        "entityId": "53dfd1e8-a78c-42bf-9153-f3ebb9c36755",
+        "name": "Settings",
+        "contentUrl": "https://{{PUBLIC_UI_HOSTNAME}}/settingsTab/index.html?name={loginHint}&tenant={tid}&theme={theme}",
+        "scopes": ["personal"]
+      },
+      {
+        "entityId": "conversations",
+        "scopes": ["personal"]
+      }
+    ],
+    "bots": [
+      {
+        "botId": "{{MICROSOFT_APP_ID}}",
+        "isNotificationOnly": true,
+        "scopes": ["personal", "groupchat"]
+      }
+    ],
+    "connectors": [],
+    "composeExtensions": [],
+    "permissions": ["identity", "messageTeamMembers"],
+    "validDomains": ["{{VALID_DOMAINS}}"],
+    "showLoadingIndicator": true,
+    "webApplicationInfo": {
+      "id": "{{MICROSOFT_APP_ID}}",
+      "resource": "api://{{PUBLIC_UI_HOSTNAME}}/{{MICROSOFT_APP_ID}}",
+      "applicationPermissions": ["OnlineMeeting.ReadBasic.Chat"]
+    },
+    "localizationInfo": {
+      "defaultLanguageTag": "en-us"
+    }
+  }

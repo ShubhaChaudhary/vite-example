@@ -1,0 +1,82 @@
+
+
+{
+    "parser": "@typescript-eslint/parser",
+    "root": true,
+    "parserOptions": {
+      "project": "./tsconfig.json",
+      "ecmaVersion": 2020,
+      "sourceType": "module",
+      "ecmaFeatures": {
+        "jsx": true
+      }
+    },
+    "settings": {
+      "react": {
+        "version": "detect"
+      }
+    },
+    "extends": ["eslint:recommended", "plugin:react/recommended", "prettier"],
+    "plugins": [
+      "@typescript-eslint",
+      "react-hooks",
+      "jest",
+      "filenames",
+      "i18next"
+    ],
+    "rules": {
+      "react/prop-types": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "filenames/match-regex": [2, "^([a-z0-9]+)([A-Z][a-z0-9]+)*$", true],
+      "filenames/match-exported": 2,
+      "prefer-const": "error",
+      "no-var": "error",
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^_",
+          "caughtErrorsIgnorePattern": "^_"
+        }
+      ],
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/unbound-method": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-floating-promises": "off",
+      "@typescript-eslint/adjacent-overload-signatures": "off",
+      "@typescript-eslint/restrict-template-expressions": "off",
+      "no-prototype-builtins": "off",
+      "@typescript-eslint/no-var-requires": "off",
+      "@typescript-eslint/prefer-regexp-exec": "off",
+      "react/display-name": "off",
+      "react/no-unknown-property": "off",
+      "i18next/no-literal-string": [
+        "warn",
+        {
+          "markupOnly": true,
+          "onlyAttribute": [
+            "text",
+            "loadingText",
+            "title",
+            "subtitle",
+            "label",
+            "heading",
+            "body",
+            "placeholder"
+          ]
+        }
+      ],
+      "no-undef": "off",
+      "no-useless-escape": "off",
+      "no-redeclare": [
+        "error",
+        {
+          "builtinGlobals": false
+        }
+      ]
+    }
+  }

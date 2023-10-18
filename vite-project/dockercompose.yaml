@@ -1,0 +1,432 @@
+version: "3"
+
+volumes:
+  backend-bundle: { driver: local }
+  backend-config: { driver: local }
+  backend-data: { driver: local }
+  backend-node-modules: { driver: local }
+  centrifugo-data: { driver: local }
+  collaborate-node-modules: { driver: local }
+  notes-ui-msteams-node-modules: { driver: local }
+  notes-web-app-node-modules: { driver: local }
+  grafana-data: { driver: local }
+  metabase-data: { driver: local }
+  minio-data: { driver: local }
+  postgres-audit-data: { driver: local }
+  postgres-metabase-data: { driver: local }
+  postgres-primary-data: { driver: local }
+  redis-data: { driver: local }
+  kafka-data: { driver: local }
+
+services:
+  # core app
+  backend:
+    build:
+      context: ./
+      dockerfile: Dockerfile.dev
+      args:
+        - FURY_AUTH
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "nc", "-vz", "localhost", "5000" ]
+    ports:
+      - 5000:5000
+    volumes:
+      - .:/app
+      - backend-bundle:/bundle
+      - backend-config:/config
+      - backend-node-modules:/app/node_modules
+    environment:
+      - API_HOST=${BACKEND_NGROK_SUBDOMAIN}.${NGROK_REGION}.ngrok.io
+      - APP_HOST=${FRONTEND_HOSTNAME}
+      - API_LEGACY_HOST=backend:5000
+      - AUDIT_POSTGRES_HOST=postgres-audit
+      - AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+      - AWS_ENDPOINT=http://minio:9000
+      - AWS_HOST=minio
+      - AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      - CENTRIFUGO_API_ENDPOINT=http://centrifugo:8888/api
+      - CENTRIFUGO_API_KEY=SECRET
+      - CENTRIFUGO_TOKEN_HMAC_SECRET=SECRET
+      - CENTRIFUGO_WS_ENDPOINT=ws://centrifugo:8888/connection/websocket
+      - FAKTORY_URL=tcp://faktory:7419
+      - FLIPPER_REDIS_URL=redis://redis:6379/1
+      - GLOBAL_KAFKA_BROKER=kafka:9093
+      - KAFKA_BROKER=kafka:9093
+      - POSTGRES_AUDIT_HOST=postgres-audit
+      - POSTGRES_AUDIT_PORT=5432
+      - POSTGRES_HOST=postgres-primary
+      - POSTGRES_PRIMARY_HOST=postgres-primary
+      - POSTGRES_PRIMARY_PORT=5432
+      - PUSH_GATEWAY_URL=http://prom-aggregation-gateway:9001
+      - REDIS_HOST=redis
+      - REDIS_URL=redis://redis:6379
+      - SMTP_SERVER=mailcatcher
+      - MSTEAMS_CHATBOT_API_BASE_URL=http://notes-ui-msteams:3007
+    depends_on:
+      faktory:
+        condition: service_healthy
+      postgres-audit:
+        condition: service_healthy
+      postgres-primary:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  backend-ngrok:
+    image: shkoliar/ngrok:latest
+    restart: unless-stopped
+    links:
+      - backend
+    environment:
+      - DOMAIN=${BACKEND_DOMAIN-backend}
+      - PORT=5000
+      - AUTH_TOKEN=${NGROK_AUTH-}
+      - SUBDOMAIN=${BACKEND_NGROK_SUBDOMAIN-}
+      - REGION=${NGROK_REGION-}
+    depends_on:
+      - backend
+
+  collaborate:
+    build:
+      context: ../notes-collaborate
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    ports:
+      - 1234:1234
+    volumes:
+      - ../notes-collaborate:/app
+      - collaborate-node-modules:/app/node_modules
+    environment:
+      - API_URL=http://backend:5000
+      - HOST=0.0.0.0
+      - NODE_ENV=development
+      - PERSISTENCE_BACKEND=redis
+      - REDIS_URL=redis://redis:6379/2
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  collaborate-ngrok:
+    profiles: [ "all", "expose" ]
+    image: shkoliar/ngrok:latest
+    restart: unless-stopped
+    links:
+      - collaborate
+    environment:
+      - DOMAIN=${BACKEND_DOMAIN-collaborate}
+      - PORT=1234
+      - AUTH_TOKEN=${NGROK_AUTH-}
+      - SUBDOMAIN=${COLLABORATE_NGROK_SUBDOMAIN-}
+      - REGION=${NGROK_REGION-}
+    depends_on:
+      - collaborate
+
+  frontend:
+    build:
+      context: ../notes-web-app
+      dockerfile: Dockerfile.dev
+    ports:
+      - 8080:8080
+    volumes:
+      - ../notes-web-app:/app/:delegated
+      - notes-web-app-node-modules:/app/node_modules/:delegated
+    restart: unless-stopped
+    links:
+      - notes-ui-msteams
+    environment:
+      - API_URL=https://${BACKEND_NGROK_SUBDOMAIN}.${NGROK_REGION}.ngrok.io/v1
+      - COLLABORATE_URL=${COLLABORATE_URL}
+      - PUBLIC_PATH=${FRONTEND_URL}/
+      - CENTRIFUGE_URL=${CENTRIFUGO_URL}
+    depends_on:
+      - notes-ui-msteams
+
+  frontend-ngrok:
+    profiles: [ "all", "expose" ]
+    image: shkoliar/ngrok:latest
+    restart: unless-stopped
+    links:
+      - frontend
+    environment:
+      - DOMAIN=${BACKEND_DOMAIN-frontend}
+      - PORT=8080
+      - AUTH_TOKEN=${NGROK_AUTH-}
+      - SUBDOMAIN=${FRONTEND_NGROK_SUBDOMAIN-}
+      - REGION=${NGROK_REGION-}
+    depends_on:
+      - frontend
+
+  notes-ui-msteams:
+    build:
+      context: ../notes-ui-msteams
+      dockerfile: Dockerfile.dev
+    ports:
+      - 3007:3007
+      - 3000:3000
+    volumes:
+      - ../notes-ui-msteams:/app/:delegated
+      - notes-ui-msteams-node-modules:/app/node_modules/:delegated
+    restart: unless-stopped
+    links:
+      - backend
+      - kafka
+    environment:
+      - PUBLIC_UI_HOSTNAME=${UI_NGROK_SUBDOMAIN}.${NGROK_REGION}.ngrok.io
+      - PUBLIC_HOSTNAME=${CHATBOT_NGROK_SUBDOMAIN}.${NGROK_REGION}.ngrok.io
+      - NOTES_API_HOSTNAME=${BACKEND_NGROK_SUBDOMAIN}.${NGROK_REGION}.ngrok.io
+      - NOTES_WEB_HOSTNAME=${FRONTEND_HOSTNAME}
+      - NOTES_CENTRIFUGO_HOSTNAME=${CENTRIFUGO_HOSTNAME}
+      - GLOBAL_KAFKA_BROKERS=kafka:9093
+      - ENV=local
+    depends_on:
+      - backend
+      - kafka
+
+  microsoft-chatbot-ngrok:
+    image: shkoliar/ngrok:latest
+    restart: unless-stopped
+    links:
+      - notes-ui-msteams
+    environment:
+      - DOMAIN=${BACKEND_DOMAIN-notes-ui-msteams}
+      - PORT=3007
+      - AUTH_TOKEN=${NGROK_AUTH-}
+      - SUBDOMAIN=${CHATBOT_NGROK_SUBDOMAIN-}
+      - REGION=${NGROK_REGION-}
+    depends_on:
+      - notes-ui-msteams
+
+  microsoft-ui-ngrok:
+    image: shkoliar/ngrok:latest
+    restart: unless-stopped
+    links:
+      - notes-ui-msteams
+    environment:
+      - DOMAIN=${BACKEND_DOMAIN-notes-ui-msteams}
+      - PORT=3000
+      - AUTH_TOKEN=${NGROK_AUTH-}
+      - SUBDOMAIN=${UI_NGROK_SUBDOMAIN-}
+      - REGION=${NGROK_REGION-}
+    depends_on:
+      - notes-ui-msteams
+
+  # services
+  faktory:
+    image: contribsys/faktory:latest
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "nc", "-vz", "localhost", "7419" ]
+    command: /faktory -b :7419 -w :7420
+    ports:
+      - 7419:7419
+      - 7420:7420
+
+  centrifugo:
+    image: centrifugo/centrifugo:v2.8.0
+    restart: unless-stopped
+    command: centrifugo -c config.json
+    ports:
+      - 8888:8888
+    volumes:
+      - centrifugo-data:/centrifugo
+      - ./centrifugo/config.json:/centrifugo/config.json
+
+  centrifugo-ngrok:
+    profiles: [ "all", "expose" ]
+    image: shkoliar/ngrok:latest
+    restart: unless-stopped
+    links:
+      - centrifugo
+    environment:
+      - DOMAIN=${BACKEND_DOMAIN-centrifugo}
+      - PORT=8888
+      - AUTH_TOKEN=${NGROK_AUTH-}
+      - SUBDOMAIN=${CENTRIFUGO_NGROK_SUBDOMAIN-}
+      - REGION=${NGROK_REGION-}
+    depends_on:
+      - centrifugo
+
+  # data stores
+  postgres-audit:
+    image: postgres:13.6-alpine
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-d",
+          "postgres",
+          "-U",
+          "postgres"
+        ]
+    ports:
+      - 5433:5432
+    volumes:
+      - ./db/dumps:/db/dumps
+      - ./tmp:/tmp
+      - postgres-audit-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_PASSWORD=password
+
+  postgres-primary:
+    image: postgres:13.6-alpine
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-q",
+          "-d",
+          "postgres",
+          "-U",
+          "postgres"
+        ]
+    ports:
+      - 5432:5432
+    volumes:
+      - ./db/dumps:/db/dumps
+      - ./tmp:/tmp
+      - postgres-primary-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_PASSWORD=password
+
+  redis:
+    image: redis:6.2-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+    ports:
+      - 6379:6379
+    volumes:
+      - redis-data:/data
+
+  # kafka
+  kafka:
+    image: bitnami/kafka:latest
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "kafka-topics.sh",
+          "--list",
+          "--bootstrap-server",
+          "127.0.0.1:9092"
+        ]
+    ports:
+      - 9092:9092
+      - 9093:9093
+    volumes:
+      - kafka-data:/bitnami/kafka
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@127.0.0.1:9094
+      - KAFKA_CFG_LISTENERS=EXTERNAL://:9092,CLIENT://:9093,CONTROLLER://:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_ADVERTISED_LISTENERS=EXTERNAL://localhost:9092,CLIENT://kafka:9093
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
+
+  console:
+    image: vectorized/console
+    restart: unless-stopped
+    ports:
+      - 8090:8080
+    environment:
+      - KAFKA_BROKERS=kafka:9093
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  # mock services
+  mailcatcher:
+    image: jeanberu/mailcatcher
+    restart: unless-stopped
+    ports:
+      - 1080:1080
+      - 1025:1025
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    entrypoint: minio server /data
+    ports:
+      - 9000:9000
+      - 9010:9010
+    volumes:
+      - minio-data:/data
+    environment:
+      - MINIO_CONSOLE_ADDRESS=:9010
+      - MINIO_ROOT_USER=AKIAIOSFODNN7EXAMPLE
+      - MINIO_ROOT_PASSWORD=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+  # metabase
+  metabase:
+    profiles: [ "all", "metabase" ]
+    image: metabase/metabase:latest
+    restart: unless-stopped
+    ports:
+      - 3200:3000
+    volumes:
+      - metabase-data:/metabase-data
+    environment:
+      - MB_DB_FILE=/metabase-data/metabase.db
+      - MB_DB_TYPE=postgres
+      - MB_DB_DBNAME=pinch_development
+      - MB_DB_HOST=postgres-metabase
+      - MB_DB_PORT=5432
+      - MB_DB_USER=postgres
+      - MB_DB_PASS=password
+
+  postgres-metabase:
+    profiles: [ "all", "metabase" ]
+    image: postgres:13.6-alpine
+    restart: unless-stopped
+    ports:
+      - 5434:5432
+    volumes:
+      - postgres-metabase-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_PASSWORD=password
+
+  # observability
+  prometheus:
+    profiles: [ "all", "observability" ]
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    profiles: [ "all", "observability" ]
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yaml
+      - grafana-data:/var/lib/grafana
+
+  # setup
+  createbuckets:
+    profiles: [ "setup" ]
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c " /usr/bin/mc config host add minio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY; /usr/bin/mc mb minio/calls; /usr/bin/mc mb minio/logos; /usr/bin/mc mb minio/uploads; /usr/bin/mc policy download minio/calls; /usr/bin/mc policy download minio/logos; /usr/bin/mc policy download minio/uploads; exit 0; " 

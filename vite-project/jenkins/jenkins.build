@@ -1,0 +1,24 @@
+pipeline {
+  libraries {
+    lib "jenkins-shared-library"
+  }
+  agent { 
+    kubernetes { 
+      label 'build-pod'
+      inheritFrom 'jenkins-tools'
+      idleMinutes 3
+    }
+  }
+  stages {
+    stage('Import deploy DSL') {
+      steps {
+        script {
+          jobDsl targets: ".jenkins/deploy_${env.INSTANCE}_infra.dsl"
+            ignoreMissingFiles: true
+          jobDsl targets: ".jenkins/deploy_${env.INSTANCE}_svc.dsl"
+            ignoreMissingFiles: true
+        }
+      }
+    }
+  }
+}

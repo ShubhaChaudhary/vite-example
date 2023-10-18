@@ -1,0 +1,280 @@
+{
+    "user": {
+      "id": 130,
+      "encoded_id": "lyrjnkdj4p",
+      "display_name": "Zack Corr",
+      "first_name": "Zack",
+      "last_name": "Corr",
+      "email": "zack.corr@notiv.com",
+      "email_provider": "google",
+      "onboarded_at": "2021-10-13T11:51:10.565+10:00",
+      "last_sign_in_at": "2021-12-10T07:48:04.138+10:00",
+      "phone_number": "+642040940173",
+      "time_zone": "Australia/Brisbane",
+      "attach_calendar_event_link": true,
+      "auto_join": true,
+      "auto_join_with": "",
+      "auto_join_without": "",
+      "notification_accepted": true,
+      "notification_channels": true,
+      "notification_digest": true,
+      "notification_missing_data": true,
+      "notification_processed": false,
+      "notification_reminder": true,
+      "notification_task": true,
+      "calendar_sync_queued_at": "2021-12-14T06:48:41.123+10:00",
+      "calendar_sync_started_at": "2021-09-15T07:54:49.882+10:00",
+      "calendar_sync_finished_at": "2021-09-02T11:53:23.359+10:00",
+      "feedback_url": "https://portal.productboard.com/sfydwo4l6yiktj4q4uhpgvdb?hide_logo=1&token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2Mzk0MzIyNzIsImV4cCI6MTY0MDAzNzEzMiwiaWQiOjEzMCwiZW1haWwiOiJ6YWNrLmNvcnJAbm90aXYuY29tIiwibmFtZSI6IlphY2sgQ29yciIsImNvbXBhbnlfbmFtZSI6Ik5vdGl2IiwiY29tcGFueV9kb21haW4iOiJub3Rpdi5jb20ifQ.aY-Ee4FJEJYk18P05Hn4QLTUgsQO_HhS3yMihUklF_s",
+      "early_access_features_url": "https://portal.productboard.com/sfydwo4l6yiktj4q4uhpgvdb/tabs/6-early-access?hide_logo=1&token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2Mzk0MzIyNzIsImV4cCI6MTY0MDAzNzEzMiwiaWQiOjEzMCwiZW1haWwiOiJ6YWNrLmNvcnJAbm90aXYuY29tIiwibmFtZSI6IlphY2sgQ29yciIsImNvbXBhbnlfbmFtZSI6Ik5vdGl2IiwiY29tcGFueV9kb21haW4iOiJub3Rpdi5jb20ifQ.aY-Ee4FJEJYk18P05Hn4QLTUgsQO_HhS3yMihUklF_s",
+      "voice_enrolment_scripts_url": "https://notiv-static-staging.s3-us-west-2.amazonaws.com/website/transcripts.json",
+      "meeting_types": ["allhands", "client"],
+      "meeting_tasks": [],
+      "role": "Test",
+      "voice_profile": { "trained": true, "enrolment_count": 0 },
+      "industry": "accounting",
+      "channel_name": "user#lyrjnkdj4p",
+      "username": "zack.corr",
+      "avatar_url": "https://pinch-logo-data-dev.s3.amazonaws.com/uploads/user/avatar/lyrjnkdj4p/thumb_63980c3c953104105afe93dc9d5c1683",
+      "subscription": {
+        "plan": {
+          "name": "Pro"
+        }
+      },
+      "default_calling_country": {
+        "name": "United States of America",
+        "flag": "🇺🇸",
+        "code": "US"
+      },
+      "has_calendars": true,
+      "calendar_connected": true,
+      "admin": true,
+      "created_by_invite": false,
+      "features": {
+        "add_team_members": {
+          "name": "add_team_members",
+          "description": "Invite/add team members",
+          "enabled": true,
+          "limit": { "usage": 11, "amount": null, "units": "users" },
+          "plans": []
+        },
+        "api_authentication": {
+          "name": "api_authentication",
+          "description": "Api authentication",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "attach_calendar_event_link": {
+          "name": "attach_calendar_event_link",
+          "description": "Attach calendar event link",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "collaborative_editing": {
+          "name": "collaborative_editing",
+          "description": "Collaborative editing",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "custom_moments": false,
+        "custom_templates": false,
+        "edit_meeting_data": {
+          "name": "edit_meeting_data",
+          "description": "Edit meeting data",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "edit_transcript": {
+          "name": "edit_transcript",
+          "description": "Edit transcripts",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "export_meeting": false,
+        "front_end_authentication": {
+          "name": "front_end_authentication",
+          "description": "Front end authentication",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "import_meeting": {
+          "name": "import_meeting",
+          "description": "Import meeting audio",
+          "enabled": true,
+          "limit": { "usage": 1, "amount": null, "units": "activities" },
+          "plans": []
+        },
+        "integrations": {
+          "name": "integrations",
+          "description": "Integrations",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "last_viewed": {
+          "name": "last_viewed",
+          "description": "Last viewed",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "meeting_roles": {
+          "name": "meeting_roles",
+          "description": "Meeting roles",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "meeting_setup_notify": {
+          "name": "meeting_setup_notify",
+          "description": "Meeting setup notify",
+          "enabled": false,
+          "limit": null,
+          "plans": []
+        },
+        "notes_templates": {
+          "name": "notes_templates",
+          "description": "Notes templates",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "notifications": {
+          "name": "notifications",
+          "description": "Notifications",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "onboarding_invite": {
+          "name": "onboarding_invite",
+          "description": "Onboarding invite",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "onboarding_modal": {
+          "name": "onboarding_modal",
+          "description": "Onboarding modal",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "lite_experience": {
+          "name": "lite_experience",
+          "description": "Lite experience",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "realtime_transcription": {
+          "name": "realtime_transcription",
+          "description": "Realtime transcription",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "recommendations": false,
+        "record_meeting": {
+          "name": "record_meeting",
+          "description": "Record meeting audio",
+          "enabled": true,
+          "limit": { "usage": 0, "amount": 300, "units": "minutes" },
+          "plans": []
+        },
+        "recordings": {
+          "name": "recordings",
+          "description": "Recordings",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "review_recap": {
+          "name": "review_recap",
+          "description": "Review recap",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "speaker_enrolment": {
+          "name": "speaker_enrolment",
+          "description": "Speaker enrolment",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "speaker_suggestions": {
+          "name": "speaker_suggestions",
+          "description": "Speaker suggestions",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "tags": {
+          "name": "tags",
+          "description": "Tags",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "team_channels": {
+          "name": "team_channels",
+          "description": "Team channels",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "team_roles": {
+          "name": "team_roles",
+          "description": "Team roles",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "video_import": false,
+        "web_capture": {
+          "name": "web_capture",
+          "description": "Web capture",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "web_capture_google_meet": {
+          "name": "web_capture_google_meet",
+          "description": "Web capture google meet",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        },
+        "web_capture_zoom": {
+          "name": "web_capture_zoom",
+          "description": "Web capture zoom",
+          "enabled": true,
+          "limit": null,
+          "plans": []
+        }
+      },
+      "profile_complete": true,
+      "mobile_user": true,
+      "job_role": "Test",
+      "auth_token": "034e7c54c130b96ee3184024b70210aa4f2788eaa0cfa199a6698d548fe25226af2b89f574a07bfbdcb6a37e7202f02bd8bb7189e5cfc683ae6538148d25dd75",
+      "ws_token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJseXJqbmtkajRwIiwiY2hhbm5lbCI6InVzZXIjbHlyam5rZGo0cCIsImV4cCI6MTY0MDY0MTkzMn0.4oj0bKRt6jPqKQna83wr2P9l8rgbSQt1vrDz5hTF4nc",
+      "identities": [
+        {
+          "encoded_id": "dgl02wk01o",
+          "uid": "109402063712748735657",
+          "provider": "google_oauth2",
+          "created_at": "2021-10-07T07:54:43.009+10:00",
+          "updated_at": "2021-10-08T12:41:46.660+10:00",
+          "calendar_readable": true,
+          "calendar_writable": false
+        }
+      ]
+    }
+  }
